@@ -6,36 +6,55 @@
  */
 import React from 'react';
 import ReactDOM from 'react-dom';
-class Clock extends React.Component {
+
+class NameForm extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {date: new Date()};
+        this.state = {value: ''};
+
+        this.handleChange = this.handleChange.bind(this);
+        this.handleSubmit = this.handleSubmit.bind(this);
     }
-    componentDidMount() {
-        this.tick();
+
+    handleChange(event) {
+        this.setState({value: event.target.value});
     }
-    componentWillUnmount() {
-        clearTimeout(this.timeId);
+
+    handleSubmit(event) {
+        alert('A name was submitted: ' + this.state.value);
+        // event.preventDefault();
     }
-    tick() {
-        if (this.timeId) {
-            clearTimeout(this.timeId);
-        }
-        this.setState({
-            date: new Date()
-        });
-        this.timeId = setTimeout(() => this.tick(), 1000);
-    }
+
     render() {
         return (
-            <div>
-                <h1>Hello, world!</h1>
-                <h2>It is {this.state.date.toLocaleTimeString()}.</h2>
-            </div>
+            <form onSubmit={this.handleSubmit}>
+                <label>
+                    Name:
+                    <input type="text" value={this.state.value} onChange={this.handleChange} />
+                </label>
+                <input type="submit" value="Submit" />
+            </form>
         );
     }
 }
+
+class Root extends React.Component {
+    constructor(props) {
+        super(props);
+    }
+    handleChange() {
+        console.log("trigger root's change!");
+    }
+    render() {
+        return (
+            <div onSubmit={this.handleChange.bind(this)}>
+                <NameForm/>
+            </div>
+        )
+    }
+}
+
 ReactDOM.render(
-    <Clock/>
-    , document.getElementById('root')
-);
+    <Root/>,
+    document.getElementById('root')
+)
