@@ -7,133 +7,96 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
-class ProductCategoryRow extends React.Component {
-    render() {
-        return <tr><th colSpan="2">{this.props.category}</th></tr>;
+function shouldUpdate(WrappedComponent) {
+    return class extends React.Component {
+        shouldComponentUpdate(nextProps) {
+            const props = this.props;
+            for (let key in props) {
+                if (!props.hasOwnProperty(key)) {
+                    continue;
+                }
+                if (nextProps[key] !== props[key]) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        render() {
+            return <WrappedComponent {...this.props}/>
+        }
     }
 }
 
-class ProductRow extends React.Component {
+const A = shouldUpdate(class extends React.Component {
+    constructor(props) {
+        super(props);
+        console.log('A is created')
+    }
+    componentWillUpdate() {
+        console.log('A will be updated')
+    }
     render() {
-        const name = this.props.product.stocked ?
-            this.props.product.name :
-            <span style={{color: 'red'}}>
-        {this.props.product.name}
-      </span>;
         return (
-            <tr>
-                <td>{name}</td>
-                <td>{this.props.product.price}</td>
-            </tr>
-        );
+            <p>{this.props.text}</p>
+        )
     }
-}
+});
 
-class FilterableProductTable extends React.Component {
+const B = shouldUpdate(class extends React.Component {
+    constructor(props) {
+        super(props);
+        console.log('B is created')
+    }
+    componentWillUpdate() {
+        console.log('B will be updated')
+    }
+    render() {
+        return (
+            <p>{this.props.text}</p>
+        )
+    }
+});
+
+
+
+class Container extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            filterText: '',
-            inStockOnly: false
-        };
-    }
-    changeFilter(filterText) {
-        this.setState({filterText});
-    }
-    changeStock(inStockOnly) {
-        this.setState({inStockOnly});
+            textA: "I'm a",
+            textB: "I'm b"
+        }
     }
     render() {
         return (
             <div>
-                <SearchBar
-                    filterText={this.state.filterText}
-                    inStockOnly={this.state.inStockOnly}
-                    changeFilter={this.changeFilter.bind(this)}
-                    changeStock={this.changeStock.bind(this)}
-                />
-                <ProductTable
-                    products={this.props.products}
-                    filterText={this.state.filterText}
-                    inStockOnly={this.state.inStockOnly}
-                />
+                <button onClick={() => this.changeA()}>changeA</button>
+                <button onClick={() => this.changeB()}>changeB</button>
+                <A text={this.state.textA}/>
+                <B text={this.state.textB}/>
             </div>
-        );
+        )
     }
-}
-
-function _isMatch(name, filterText) {
-    const lowerName = name.toLowerCase()
-        , lowerFilter = filterText.toLowerCase();
-
-    const regEscape= function(s) {
-        return s.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    };
-    return new RegExp('^'+regEscape(lowerFilter)).test(lowerName);
-}
-
-class ProductTable extends React.Component {
-    render() {
-        const props = this.props;
-        let lastCategory = null
-            , rows = [];
-        props.products.forEach(function(product) {
-            if (props.filterText && !_isMatch(product.name, props.filterText)
-                || props.inStockOnly && !product.stocked) {
-                return;
+    changeA() {
+        this.setState(function(prevState) {
+            return {
+                textA: prevState.textA === 'change a'?
+                            "I'm a": 'change a'
             }
-            if (product.category !== lastCategory) {
-                rows.push(<ProductCategoryRow category={product.category} key={product.category} />);
-            }
-            rows.push(<ProductRow product={product} key={product.name} />);
-            lastCategory = product.category;
         });
-
-        return (
-            <table>
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Price</th>
-                </tr>
-                </thead>
-                <tbody>{rows}</tbody>
-            </table>
-        );
+    }
+    changeB() {
+        this.setState(function(prevState) {
+            return {
+                textB: prevState.textB === 'change b'?
+                    "I'm b": 'change b'
+            }
+        });
     }
 }
 
-class SearchBar extends React.Component {
-    handleInput(e) {
-        this.props.changeFilter(e.target.value);
-    }
-    handleClick(e) {
-        this.props.changeStock(e.target.checked);
-    }
-    render() {
-        return (
-            <form>
-                <input type="text" placeholder="Search..." value={this.props.filterText} onInput={this.handleInput.bind(this)}/>
-                <p>
-                    <input type="checkbox" checked={this.props.inStockOnly} onChange={this.handleClick.bind(this)}/>
-                    {' '}
-                    Only show products in stock
-                </p>
-            </form>
-        );
-    }
-}
-
-const PRODUCTS = [
-    {category: 'Sporting Goods', price: '$49.99', stocked: true, name: 'Football'},
-    {category: 'Sporting Goods', price: '$9.99', stocked: true, name: 'Baseball'},
-    {category: 'Sporting Goods', price: '$29.99', stocked: false, name: 'Basketball'},
-    {category: 'Electronics', price: '$99.99', stocked: true, name: 'iPod Touch'},
-    {category: 'Electronics', price: '$399.99', stocked: false, name: 'iPhone 5'},
-    {category: 'Electronics', price: '$199.99', stocked: true, name: 'Nexus 7'}
-];
 
 ReactDOM.render(
-    <FilterableProductTable products={PRODUCTS} />,
+    <Container/>,
     document.getElementById('root')
-);
+)
